@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interp3D: Correspondence-Aware Interpolation for Generative Textured 3D Morphing</title>
+  <meta name="description" content="Interp3D: training-free framework for continuous and plausible textured 3D morphing." />
+
+  <!-- TODO: Put a social preview image (teaser) later -->
+  <!-- <meta property="og:image" content="assets/teaser.jpg" /> -->
+  
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
+  <style>
+    :root{
+  --bg:#ffffff;      /* 背景色 */
+  --fg:#111111;      /* 前景色（文字） */
+  --muted:#666666;   /* 次要文字颜色 */
+  --border:#e9e9ee;  /* 边框颜色 */
+  --card:#f7f7fa;    /* 卡片背景色 */
+  --btn:#111111;     /* 按钮背景色 */
+  --btnfg:#ffffff;   /* 按钮文字颜色 */
+}
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a{ color:inherit; text-decoration:none; }
+    a.underline{ text-decoration: underline; text-decoration-thickness: from-font; }
+    .container{
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 28px 18px 70px;
+    }
+    header{
+      padding-top: 12px;
+      text-align: center;
+    }
+    h1{
+      font-size: 44px;
+      line-height: 1.25;
+      margin: 8px 0 20px;
+      letter-spacing: -0.03em;
+      text-transform: none;
+      font-weight: 700;
+    }
+    .title-main{
+      display: inline;
+      font-size: 44px;
+      line-height: 1.25;
+      margin: 8px 0 8px;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      font-weight: 700;
+    }
+    .title-sub{
+      display: block;
+      font-size: 44px;
+      line-height: 1.25;
+      margin: 0;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      font-weight: 700;
+    }
+    .title-sub-first{
+      display: inline;
+      font-size: 44px;
+      line-height: 1.25;
+      margin: 0;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      font-weight: 700;
+    }
+    .title-sub:last-of-type{
+      margin-bottom: 16px;
+    }
+    .subtitle{
+      color: var(--muted);
+      margin: 12px 0 0;
+      font-size: 19px;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+    .authors{
+      margin-top: 20px;
+      color: #2563eb;
+      font-size: 19px;
+      line-height: 1.7;
+      font-weight: 500;
+    }
+    .authors a{
+      color: #2563eb;
+      font-weight: 500;
+    }
+    .authors .muted{ color: var(--muted); font-weight: 400; }
+    .affils{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .note{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .btnrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 35px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #000000;
+      background: #000000;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn.primary{
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+    .btn:hover{
+      background: #333333;
+      border-color: #333333;
+    }
+    .btn:hover{ filter: brightness(0.98); }
+    .divider{
+      height:1px;
+      background: var(--border);
+      margin: 26px 0;
+    }
+    .block{
+      margin-top: 28px;
+    }
+    .block h2{
+      margin: 0 0 20px;
+      font-size: 34px;
+      letter-spacing: -0.02em;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    figure{
+      margin: 0;
+      padding: 0;
+    }
+    .teaser{
+      width:60%;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--card);
+      overflow: hidden;
+    }
+    #framework .teaser{
+      width: 55%;
+    }
+    .teaser img{
+      width:100%;
+      display:block;
+    }
+    .caption{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .caption.teaser-caption{
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 19px;
+      line-height: 1.7;
+    }
+    .abstract{
+      width: 45%;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: var(--fg);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* Morphing examples - Wukong style */
+    .examples{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 25px;
+    }
+    .morph-case{
+      width: 80%;
+      margin: 0 auto 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+    }
+    .morph-case:last-child{
+      border-bottom: none;
+    }
+    /* Comparison case缩小 */
+    .comparison-case{
+      width: 60%;
+    }
+    /* Rabbit comparison case的图片不强制正方形 */
+    .comparison-rabbit .side-col img{
+      aspect-ratio: auto;
+      object-fit: contain;
+    }
+    /* Rabbit comparison case的side-col缩小 */
+    .comparison-rabbit .side-col{
+      width: 90px;
+    }
+    .morph-grid-container{
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    /* 左右侧图片栏 */
+    .side-col{
+      width: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--fg);
+      flex-shrink: 0;
+    }
+    .side-col img{
+      width: 100%;
+      border-radius: 6px;
+      border: 1.5px solid #c0c0c0;
+      margin-bottom: 5px;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
+    /* 中间 3D 展示栏 */
+    .center-col{
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: none;
+      width: 100%;
+      min-width: 0;
+    }
+    .morph-row{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* 行标签 (竖排文字) */
+    .row-title{
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 16px;
+      font-weight: 800;
+      color: #444;
+      width: auto;
+      min-width: 32px;
+      margin-right: 8px;
+      text-align: center;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    /* Interp3D 方法名字用红色（仅在comparison部分） */
+    .comparison-case .row-title-interp3d{
+      color: #dc2626;
+    }
+    /* Morphing Examples部分的case缩小 */
+    #examples .morph-case{
+      width: 75%;
+    }
+    /* 交互式格子 */
+    .morph-cell{
+      flex: 1;
+      aspect-ratio: 1 / 1;
+      min-width: 100px;
+      min-height: 100px;
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 1.5px solid #c0c0c0;
+    }
+    /* 静态封面图 */
+    .morph-cell img.poster{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    /* MorphFlow行图片放大 */
+    .morphflow-row .morph-cell img.poster{
+      transform: scale(1.8);
+      transform-origin: center center;
+    }
+    /* 悬浮遮罩层 */
+    .morph-cell .overlay{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .morph-cell:hover .overlay{
+      opacity: 1;
+    }
+    /* 按钮样式 */
+    .btn-3d{
+      background: white;
+      color: #333;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transform: translateY(10px);
+      transition: transform 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .morph-cell:hover .btn-3d{
+      transform: translateY(0);
+    }
+    /* Model Viewer 样式 */
+    model-viewer{
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+    }
+
+    .citation-section{
+      margin-top: 48px;
+    }
+    .citation-section h2{
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .citation-box{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .citation-box pre{
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #000000;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .footer{
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align:center;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 860px){
+      body{ font-size: 15px; }
+      h1{ font-size: 32px; line-height: 1.3; }
+      .title-main{ font-size: 32px; }
+      .title-sub-first{ font-size: 32px; }
+      .title-sub{ font-size: 32px; }
+      .block h2{ font-size: 28px; }
+      .subtitle{ font-size: 16px; }
+      .authors{ font-size: 16px; }
+      .abstract{ width: 90%; font-size: 15px; padding: 18px 20px; }
+      .caption{ font-size: 14px; }
+      .caption.teaser-caption{ font-size: 15px; }
+      .morph-case{
+        width: 90%;
+      }
+      .morph-grid-container{
+        flex-direction: column;
+        gap: 15px;
+      }
+      .side-col{
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
+      .side-col img{
+        width: 100px;
+      }
+      .morph-row{
+        flex-wrap: wrap;
+      }
+      .row-title{
+        writing-mode: horizontal-tb;
+        transform: none;
+        width: 100%;
+        margin-bottom: 5px;
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header>
+      <h1>
+        <span class="title-sub-first">Interp3D: Correspondence-Aware Interpolation</span>
+        <span class="title-sub">for Generative Textured 3D Morphing</span>
+      </h1>
+
+      <!-- Optional: one-line punchline -->
+      
+
+      <div class="authors">
+        <a href="https://github.com/xiaolul2" class="underline">Xiaolu Liu</a><sup>1,2</sup>,
+        <a href="https://yl3800.github.io/" class="underline">Yicong Li</a><sup>2</sup><span class="muted">*</span>,
+        <a href="https://qy-h00.github.io/" class="underline">Qiyuan He</a><sup>2</sup>,
+        <a href="https://jyzhu.top/" class="underline">Jiayin Zhu</a><sup>2</sup>,
+        <a href="https://jiwei0523.github.io/" class="underline">Wei Ji</a><sup>3</sup>,
+        <a href="https://www.comp.nus.edu.sg/~ayao/" class="underline">Angela Yao</a><sup>2</sup>,
+        <a href="https://scholar.google.com/citations?user=SC-WmzwAAAAJ&hl=en&oi=ao" class="underline">Jianke Zhu</a><sup>1</sup><span class="muted">*</span>
+      </div>
+
+      <div class="affils">
+        <sup>1</sup>Zhejiang University &nbsp;&nbsp;
+        <sup>2</sup>National University of Singapore &nbsp;&nbsp;
+        <sup>3</sup>Nanjing University
+      </div>
+
+      <div class="note">
+        <span class="muted">*</span> Corresponding authors.
+        <!-- TODO: optionally add email addresses here -->
+        <!-- e.g., (xiaolu@..., yicong@..., jianke@...) -->
+      </div>
+
+      <div class="btnrow">
+        <!-- TODO: replace href with your actual PDF / arXiv link -->
+        <a class="btn primary" href="paper.pdf" target="_blank" rel="noopener">Paper</a>
+
+        <!-- TODO: replace href with your GitHub repo -->
+        <a class="btn" href="https://github.com/xiaolul2/interp3d" target="_blank" rel="noopener">Code</a>
+      </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <section class="block" id="teaser">
+      <figure class="teaser">
+        <!-- TODO: put your teaser image at assets/teaser.jpg -->
+        <img src="taser_page-0001.jpg" alt="Interp3D teaser" />
+      </figure>
+
+      <div class="caption">
+        Figure 1. Visualized comparisons between Interp3D and other previous methods on textural 3D morphing.
+      </div>
+    </section>
+
+    <section class="block" id="abstract">
+      <h2>Abstract</h2>
+      <div class="abstract">
+        Textured 3D morphing seeks to generate smooth and plausible transitions between
+        two 3D assets, preserving both structural coherence and fine-grained appearance.
+        This ability is crucial not only for advancing 3D generation research but also for
+        practical applications in animation, editing, and digital content creation. Exist-
+        ing approaches either operate directly on geometry, limiting them to shape-only
+        morphing while neglecting textures, or extend 2D interpolation strategies into 3D,
+        which often causes semantic ambiguity, structural misalignment, and texture blur-
+        ring. These challenges underscore the necessity to jointly preserve geometric con-
+        sistency, texture alignment, and robustness throughout the transition process. To
+        address this, we propose Interp3D, a novel training-free framework for textured
+        3D morphing. It harnesses generative priors and adopts a progressive alignment
+        principle to ensure both geometric fidelity and texture coherence. Starting from se-
+        mantically aligned interpolation in condition space, Interp3D enforces structural
+        consistency via SLAT (Structure Latent)-guided structure interpolation, and finally transfers appearance details through fine-grained texture fusion. For compre-
+        hensive evaluations, we construct a dedicated dataset, Interp3DData, with graded
+        difficulty levels and assess generation results from fidelity, transition smoothness,
+        and plausibility. Both quantitative metrics and human studies demonstrate the significant advantages of our proposed approach over previous methods.
+      </div>
+      <!-- TODO: optionally add links to dataset / demo / supplementary here -->
+    </section>
+
+    <section class="block" id="examples">
+      <h2>Morphing Examples</h2>
+
+      <!--
+        TODO: You said "后面放图和3d" — I prepared two kinds of placeholders:
+        (A) A strip of 7 images (alpha=0..1) for each case
+        (B) A placeholder area where you can later embed 3D viewer (e.g., model-viewer / three.js)
+
+        Recommended file structure:
+          assets/examples/case01/source.jpg
+          assets/examples/case01/target.jpg
+          assets/examples/case01/morph_00.jpg
+          assets/examples/case01/morph_01.jpg
+          ...
+          assets/examples/case01/morph_06.jpg
+
+        If you use 3D:
+          assets/models/case01_alpha00.glb
+          ...
+      -->
+
+      <p style="text-align: center;">Click on any image below to load the interactive 3D model.</p>
+
+      <div class="examples">
+        <!-- Example 1 -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/crab0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_0.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_1.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_2.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_3.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_4.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_5.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/crab_6.glb')">
+                  <img class="poster" src="cases/mv_images/crab/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/crab1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 1. Morphing from a Robot Crab to a Mushroom.</p>
+        </div>
+
+        <!-- Example 2: Deer -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/deer0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_0.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_1.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_2.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_3.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_4.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_5.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/deer_6.glb')">
+                  <img class="poster" src="cases/mv_images/deer/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/deer1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 2. Morphing from a Deer to a Spirit Animal.</p>
+        </div>
+
+        <!-- Example 3: Dragon -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/dragon0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_0.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_1.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_2.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_3.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_4.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_5.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/dragon_6.glb')">
+                  <img class="poster" src="cases/mv_images/dragon/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/dragon1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 3. Morphing from a Dragon to a Transformer.</p>
+        </div>
+
+        <!-- Example 4: Human -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/human0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_0.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_1.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_2.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_3.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_4.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_5.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/human_6.glb')">
+                  <img class="poster" src="cases/mv_images/human/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/human1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 4. Morphing from a Fat Human to a Slim Boy.</p>
+        </div>
+
+        <!-- Example 5: Mario -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/mario0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_0.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_1.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_2.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_3.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_4.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_5.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/mario_6.glb')">
+                  <img class="poster" src="cases/mv_images/mario/seq_6_view_36.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/mario1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 5. Morphing from a Mario to a Monkey.</p>
+        </div>
+
+        <!-- Example 6: Patrick -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/patrick0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_0.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_1.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_2.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_3.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_4.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_5.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/patrick_6.glb')">
+                  <img class="poster" src="cases/mv_images/patrick/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/patrick1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 6. Morphing from a Patrick Star to a Penguin.</p>
+        </div>
+
+        <!-- Example 7: Pig -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/pig0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_0.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_1.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_2.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_3.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_4.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_5.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pig_6.glb')">
+                  <img class="poster" src="cases/mv_images/pig/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/pig1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 7. Morphing from an Old Man to a Pig.</p>
+        </div>
+
+        <!-- Example 8: Pikachu -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/pikachu0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_0.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_1.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_2.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_3.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_4.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_5.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/pikachu_6.glb')">
+                  <img class="poster" src="cases/mv_images/pikachu/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/pikachu1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 8. Morphing from a Pikachu to a Stitch.</p>
+        </div>
+
+        <!-- Example 9: Sofa -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/sofa0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_0.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_1.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_2.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_3.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_4.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_5.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_5_view_39.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/sofa_6.glb')">
+                  <img class="poster" src="cases/mv_images/sofa/seq_6_view_39.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/sofa1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 9. Morphing from a Sofa to a Chair.</p>
+        </div>
+
+        <!-- Example 10: Statue -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/statue0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_0.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_1.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_2.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_3.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_4.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_5.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/statue_6.glb')">
+                  <img class="poster" src="cases/mv_images/statue/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/statue1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 10. Morphing from a Bull Demon King to a Statue.</p>
+        </div>
+
+        <!-- Example 11: Typical -->
+        <div class="morph-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/typical0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_0.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_0_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_1.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_1_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_2.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_2_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_3.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_3_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_4.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_4_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_5.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_5_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+                <div class="morph-cell" onclick="activate3D(this, 'cases/glb/typical_6.glb')">
+                  <img class="poster" src="cases/mv_images/typical/seq_6_view_38.png">
+                  <div class="overlay"><div class="btn-3d">View 3D</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/typical1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 11. Morphing from a Drawf to a Golblin.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="comparisons">
+      <h2>Morphing Comparisons with Previous Methods</h2>
+
+      <div class="examples">
+        <!-- Example 12: Comparison - Green Monster -->
+        <div class="morph-case comparison-case">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/green_monster0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <!-- MorphFlow -->
+              <div class="morph-row morphflow-row">
+                <div class="row-title">MorphFlow</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.0/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.5/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.167/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.333/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.667/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_0.833/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_green_monster0/debias_green_monster0_green_monster1_1.0/058.png">
+                </div>
+              </div>
+              <!-- DiffMorpher -->
+              <div class="morph-row">
+                <div class="row-title">DiffMorpher</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/green_monster/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- FreeMorph -->
+              <div class="morph-row">
+                <div class="row-title">FreeMorph</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/green_monster/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- AID-I -->
+              <div class="morph-row">
+                <div class="row-title">AID-I</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/green_monster/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- AID-O -->
+              <div class="morph-row">
+                <div class="row-title">AID-O</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/green_monster/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- Interp3D -->
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/green_monster/seq_6_view_38.png">
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/green_monster1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 1. Comparison of different morphing approaches.</p>
+        </div>
+
+        <!-- Example 13: Comparison - Rabbit -->
+        <div class="morph-case comparison-case comparison-rabbit">
+          <div class="morph-grid-container">
+            <div class="side-col">
+              <img src="cases/web_cases/rabbit0.png" alt="Source">
+              <div>Source</div>
+            </div>
+            <div class="center-col">
+              <!-- MorphFlow -->
+              <div class="morph-row morphflow-row">
+                <div class="row-title">MorphFlow</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.0/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.5/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.167/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.333/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.667/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_0.833/058.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/MorphFlow/dvgo_rabbit0/debias_rabbit0_rabbit1_1.0/058.png">
+                </div>
+              </div>
+              <!-- DiffMorpher -->
+              <div class="morph-row">
+                <div class="row-title">DiffMorpher</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/diffmorpher/rabbit/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- FreeMorph -->
+              <div class="morph-row">
+                <div class="row-title">FreeMorph</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                    <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/freemorph/rabbit/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- AID-I -->
+              <div class="morph-row">
+                <div class="row-title">AID-I</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_i/rabbit/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- AID-O -->
+              <div class="morph-row">
+                <div class="row-title">AID-O</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/aid_o/rabbit/seq_6_view_38.png">
+                </div>
+              </div>
+              <!-- Interp3D -->
+              <div class="morph-row">
+                <div class="row-title row-title-interp3d">Interp3D</div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_0_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_1_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_2_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_3_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_4_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_5_view_38.png">
+                </div>
+                <div class="morph-cell">
+                  <img class="poster" src="cases/compare_cases/interp3d/rabbit/seq_6_view_38.png">
+                </div>
+              </div>
+            </div>
+            <div class="side-col">
+              <img src="cases/web_cases/rabbit1.png" alt="Target">
+              <div>Target</div>
+            </div>
+          </div>
+          <p class="caption">Case 2. Comparison of different morphing approaches.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="framework">
+      <h2>Method Overview</h2>
+      
+      <figure class="teaser">
+        <!-- TODO: replace with your framework image -->
+        <img src="overview4_page-0001.jpg" alt="Framework diagram" />
+      </figure>
+
+      <div class="caption teaser-caption">
+        <!-- TODO: Add framework caption here -->
+        Pipeline Overview. The left presents the overall framework. The right highlights component designs. 
+        Based on the 3D generation prior, the interpolation is progressively enhanced from
+        three aspects: (a) Semantic-Aligned Condition Interpolation, (b) SLAT-Guided Structure Inter-
+        polation in structure generation, and (c) Fine-Grained Texture Fusion for appearance refinement.
+      </div>
+    </section>
+
+    <section class="block citation-section">
+      <h2>Citation</h2>
+      <div class="citation-box">
+        <pre>@article{liu2026interp3d,
+  title={Interp3D: Correspondence-Aware Interpolation for Generative Textured 3D Morphing},
+  author={Liu, Xiaolu and Li, Yicong and He, Qiyuan and Zhu, Jiayin and Ji, Wei and Yao, Angela and Zhu, Jianke},
+  journal={arXiv preprint arXiv:2601.xxxxx},
+  year={2026}
+}</pre>
+      </div>
+    </section>
+
+    <div class="footer">
+      © Interp3D Project Page
+    </div>
+  </main>
+
+  <script>
+    /**
+     * activate3D
+     * 作用：点击图片时，将 div 内部的图片替换为 model-viewer 组件
+     * @param {HTMLElement} element - 被点击的 div 元素 (this)
+     * @param {String} glbUrl - 对应的 GLB 文件路径
+     */
+    function activate3D(element, glbUrl) {
+      // 1. 构建 Model Viewer 的 HTML 字符串
+      // 这里配置了：高曝光(3.0)，无阴影(0)，自动旋转，相机自适应(auto)
+      const viewerHtml = `
+        <model-viewer 
+          src="${glbUrl}" 
+          exposure="3.0" 
+          shadow-intensity="0" 
+          camera-orbit="0deg 75deg auto" 
+          camera-controls 
+          auto-rotate
+          touch-action="pan-y">
+        </model-viewer>
+      `;
+
+      // 2. 替换内容
+      element.innerHTML = viewerHtml;
+
+      // 3. 移除点击事件，避免重复加载
+      element.onclick = null;
+      element.style.cursor = "default";
+    }
+  </script>
+</body>
+</html>
