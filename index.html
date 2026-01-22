@@ -502,18 +502,16 @@
         Textured 3D morphing seeks to generate smooth and plausible transitions between
         two 3D assets, preserving both structural coherence and fine-grained appearance.
         This ability is crucial not only for advancing 3D generation research but also for
-        practical applications in animation, editing, and digital content creation. Exist-
-        ing approaches either operate directly on geometry, limiting them to shape-only
+        practical applications in animation, editing, and digital content creation. Existing approaches either operate directly on geometry, limiting them to shape-only
         morphing while neglecting textures, or extend 2D interpolation strategies into 3D,
         which often causes semantic ambiguity, structural misalignment, and texture blur-
         ring. These challenges underscore the necessity to jointly preserve geometric con-
         sistency, texture alignment, and robustness throughout the transition process. To
         address this, we propose Interp3D, a novel training-free framework for textured
         3D morphing. It harnesses generative priors and adopts a progressive alignment
-        principle to ensure both geometric fidelity and texture coherence. Starting from se-
-        mantically aligned interpolation in condition space, Interp3D enforces structural
-        consistency via SLAT (Structure Latent)-guided structure interpolation, and finally transfers appearance details through fine-grained texture fusion. For compre-
-        hensive evaluations, we construct a dedicated dataset, Interp3DData, with graded
+        principle to ensure both geometric fidelity and texture coherence. Starting from semantically aligned interpolation in condition space, Interp3D enforces structural
+        consistency via SLAT (Structure Latent)-guided structure interpolation, and finally transfers appearance details through fine-grained texture fusion. For comprehensive evaluations, 
+        we construct a dedicated dataset, Interp3DData, with graded
         difficulty levels and assess generation results from fidelity, transition smoothness,
         and plausibility. Both quantitative metrics and human studies demonstrate the significant advantages of our proposed approach over previous methods.
       </div>
